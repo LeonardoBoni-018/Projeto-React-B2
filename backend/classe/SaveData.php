@@ -2,6 +2,7 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
 require_once __DIR__ . '/../db/index.php';
 require_once 'Torcedor.php';
 
@@ -53,11 +54,17 @@ class SaveData
     {
         $dados = $torcedor->getDados();
 
+        // Verifica se o ID foi informado
+        if (!isset($dados['id'])) {
+            echo json_encode(["success" => false, "message" => "ID do torcedor não informado!"]);
+            exit;
+        }
+
         $stmt = $this->conn->prepare(
             "UPDATE usuarios SET nome=?, idade=?, cpf=?, cidade=?, email=?, telefone=?, criado_em=?, tipo_assinatura=? WHERE id=?"
         );
         $stmt->bind_param(
-            "sissssi",
+            "sissssssi",
             $dados['nome'],
             $dados['idade'],
             $dados['cpf'],
@@ -71,15 +78,9 @@ class SaveData
 
         header('Content-Type: application/json');
         if ($stmt->execute()) {
-            echo json_encode([
-                "success" => true,
-                "message" => "Dados atualizados com sucesso!"
-            ]);
+            echo json_encode(["success" => true, "message" => "Dados atualizados com sucesso"]);
         } else {
-            echo json_encode([
-                "success" => false,
-                "message" => "Erro ao atualizar os dados: " . $stmt->error
-            ]);
+            echo json_encode(["success" => false, "message" => "Erro ao atualizar os dados: " . $stmt->error]);
         }
 
         $stmt->close();
